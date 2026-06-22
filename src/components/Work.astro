@@ -131,13 +131,23 @@
       flex-direction: column;
       gap: 12px;
     }
-    .work-img { aspect-ratio: 361 / 235; object-fit: cover; position: relative !important; z-index: 6; }
-    .cc-media {
+    /* Raised above the grain (z-index needs a position), but inset must be
+       cleared so the desktop left/top inline coords don't offset them. */
+    .work-img {
       position: relative !important;
+      inset: auto !important;
       z-index: 6;
       width: 100% !important;
       height: auto !important;
     }
+    .cc-media {
+      position: relative !important;
+      inset: auto !important;
+      z-index: 6;
+      width: 100% !important;
+      height: auto !important;
+    }
+    .cc-media-img { width: 100% !important; height: auto !important; }
     .body { font-size: 16px; line-height: 1.55; }
   }
 </style>
