@@ -1,0 +1,98 @@
+---
+// Section 1 — Landing (Figma frame 49:8, PAGE 01)
+// Evenly spaced (35.2px step); Figma's original tops were slightly uneven.
+const nav = [
+  { num: '01', label: 'WORK', id: 'work', top: 96 },
+  { num: '02', label: 'ABOUT', id: 'about', top: 131.2 },
+  { num: '03', label: 'PERSONAL', id: 'personal', top: 166.4 },
+  { num: '04', label: 'CONTACT', id: 'contact', top: 201.6 },
+];
+---
+
+<section id="top" class="frame frame--cream">
+  <div class="canvas">
+    <!-- Display name -->
+    <h1 class="name abs" style="left:48px;top:440px;width:998px">
+      SOSAIAH<br />HILLIER-BARNES*
+    </h1>
+
+    <!-- Intro blurb, top right -->
+    <p class="abs blurb" style="left:876px;top:97px;width:154px">
+      <span class="serif-italic">Computer Science Graduate</span><br />
+      <span class="serif">Aspiring Employed Person</span><br />
+      <span class="type tagline">Really cool and nice</span>
+    </p>
+
+    <!-- Hero images -->
+    <div class="hero-imgs">
+      <img class="abs hero-img" src="/images/image1.png" alt=""
+        style="left:1043px;top:96.27px;width:160px;height:203px" />
+      <img class="abs hero-img" src="/images/image2.png" alt=""
+        style="left:1219px;top:96px;width:160px;height:203px" />
+    </div>
+
+    <!-- Big index nav -->
+    <nav class="index-nav">
+      {
+        nav.map((n) => (
+          <a class="lnav abs" href={`#${n.id}`} style={`left:48px;top:${n.top}px`}>
+            <span class="lnav-num">{n.num}</span><span> {n.label}</span>
+          </a>
+        ))
+      }
+    </nav>
+
+    <!-- Scroll hint -->
+    <p class="abs scroll-hint" style="left:22px;top:871px;width:113px">↓SCROLL (PLEASE)</p>
+
+    <!-- Page marker -->
+    <p class="page-num" style="left:1358px;top:868px">PAGE 01</p>
+  </div>
+</section>
+
+<style>
+  .name {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 112.63px;
+    line-height: 1;
+    letter-spacing: -5.63px;
+    color: var(--ink);
+  }
+  .hero-img { object-fit: cover; opacity: 0.8; }
+  .lnav {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 22.35px;
+    letter-spacing: 1.1175px;
+    text-transform: uppercase;
+    color: var(--ink);
+    white-space: nowrap;
+    transition: opacity 0.15s ease;
+  }
+  .lnav:hover { opacity: 0.55; }
+  .lnav-num { font-weight: 300; }
+  .blurb { font-size: 13px; line-height: normal; color: var(--ink); }
+  .scroll-hint { font-family: var(--font-sans); font-weight: 400; font-size: 10px; color: var(--ink); }
+
+  /* Desktop wrappers are layout-neutral (children are absolutely placed). */
+  .hero-imgs,
+  .index-nav { display: contents; }
+
+  @media (max-width: 1023px) {
+    .hero-imgs,
+    .index-nav { display: flex; }
+
+    .name {
+      font-size: clamp(40px, 13vw, 104px);
+      letter-spacing: -2px;
+      line-height: 1.02;
+      order: 1;
+    }
+    .blurb { font-size: 15px; line-height: 1.5; order: 2; }
+    .hero-imgs { gap: 12px; order: 3; }
+    .hero-imgs .hero-img { flex: 1 1 0; min-width: 0; height: auto !important; }
+    .index-nav { flex-direction: column; gap: 6px; order: 4; }
+    .lnav { font-size: 20px; }
+  }
+</style>

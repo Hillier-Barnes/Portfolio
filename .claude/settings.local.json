@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp *)",
+      "mcp__figma__whoami",
+      "mcp__figma__get_metadata",
+      "mcp__figma__get_screenshot",
+      "Bash(mkdir -p .figma-screens)",
+      "Bash(curl -s -o .figma-screens/01-landing.png \"https://www.figma.com/api/mcp/asset/65345cd6-2293-4374-b969-e352deb7b49f\")",
+      "Bash(curl -s -o .figma-screens/02-about.png \"https://www.figma.com/api/mcp/asset/17f847bb-458b-4084-8945-2d10ec82b103\")",
+      "Bash(curl -s -o .figma-screens/03-work.png \"https://www.figma.com/api/mcp/asset/03936bf9-a6d3-4bd5-b184-7bb9f03e93e4\")",
+      "Bash(curl -s -o .figma-screens/04-personal.png \"https://www.figma.com/api/mcp/asset/353c14ab-d4b0-468d-819e-0e5d125fd837\")",
+      "mcp__figma__get_design_context",
+      "Bash(npm -v)",
+      "Bash(npm install *)",
+      "Bash(npx astro *)",
+      "Bash(npm run *)",
+      "Read(//tmp/**)",
+      "Bash(curl -s http://localhost:4321/)",
+      "Bash(curl -s http://localhost:4323/)"
+    ]
+  }
+}

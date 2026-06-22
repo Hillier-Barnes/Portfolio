@@ -1,0 +1,65 @@
+---
+// Global sticky navbar (desktop). Appears as soon as scrolling begins, tracks
+// the active section, and scrolls to sections on click. Hidden on mobile (hamburger).
+const links = [
+  { label: 'WORK', id: 'work' },
+  { label: 'ABOUT', id: 'about' },
+  { label: 'PERSONAL', id: 'personal' },
+  { label: 'CONTACT', id: 'contact' },
+];
+---
+
+<nav class="site-nav" aria-label="Primary">
+  <div class="site-nav__inner">
+    <a class="site-nav__brand" href="#top">SAIA*</a>
+    <div class="site-nav__links">
+      {links.map((l) => <a href={`#${l.id}`} data-nav={l.id}>{l.label}</a>)}
+    </div>
+  </div>
+</nav>
+
+<script is:inline>
+  function initSiteNav() {
+    const nav = document.querySelector('.site-nav');
+    const landing = document.getElementById('top');
+    const sections = ['work', 'about', 'personal', 'contact']
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+    const linkFor = {};
+    document.querySelectorAll('.site-nav__links a').forEach((a) => {
+      linkFor[a.getAttribute('data-nav')] = a;
+    });
+    if (!nav || !landing) return;
+
+    // Show the navbar as soon as the user scrolls; hide again at the very top.
+    const onScroll = () => nav.classList.toggle('is-visible', window.scrollY > 4);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // Highlight whichever section currently occupies the top of the viewport.
+    const visible = new Map();
+    const spy = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => visible.set(e.target.id, e.intersectionRatio));
+        let best = null;
+        let bestRatio = 0;
+        visible.forEach((ratio, id) => {
+          if (ratio > bestRatio) {
+            bestRatio = ratio;
+            best = id;
+          }
+        });
+        Object.values(linkFor).forEach((a) => a.classList.remove('is-active'));
+        if (best && linkFor[best]) linkFor[best].classList.add('is-active');
+      },
+      { threshold: [0.25, 0.5, 0.75] }
+    );
+    sections.forEach((s) => spy.observe(s));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSiteNav);
+  } else {
+    initSiteNav();
+  }
+</script>

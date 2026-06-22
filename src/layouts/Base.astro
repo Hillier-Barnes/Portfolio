@@ -1,0 +1,97 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import SiteNav from '../components/SiteNav.astro';
+import ScrollFX from '../components/ScrollFX.astro';
+
+interface Props {
+  title?: string;
+}
+const { title = 'Sosaiah Hillier-Barnes — Portfolio' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Sosaiah Hillier-Barnes — Computer Science graduate. Work, about, and contact." />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>{title}</title>
+
+    <script is:inline>
+      // Play the landing intro only on the first open of the session (refreshes
+      // skip it). Set before paint to avoid a flash of the un-revealed elements.
+      (function () {
+        try {
+          if (
+            !sessionStorage.getItem('introPlayed') &&
+            !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          ) {
+            document.documentElement.classList.add('intro');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="curtain" id="curtain" aria-hidden="true">
+      <div class="curtain__panel curtain__panel--top"></div>
+      <div class="curtain__panel curtain__panel--bottom"></div>
+      <div class="curtain__brand">
+        <span class="curtain__mark">SAIA*</span>
+        <span class="curtain__count" id="curtain-count">000</span>
+      </div>
+    </div>
+    <Header />
+    <SiteNav />
+    <main>
+      <slot />
+    </main>
+    <ScrollFX />
+
+    <script is:inline>
+      // Scale the fixed 1440x900 design canvases on desktop. We fill the viewport
+      // WIDTH (so content hugs the edges like the Figma) and let it scale up past
+      // 1 on wider screens. A cap keeps the canvas from getting much taller than
+      // the viewport on ultra-wide screens, and the section grows to the scaled
+      // height so the top/bottom markers are never clipped.
+      // Below the reflow breakpoint the CSS handles layout and scale stays at 1.
+      (function () {
+        const NATIVE_W = 1440;
+        const NATIVE_H = 900;
+        const BP = 1024;
+        const HEIGHT_CAP = 1.15; // max canvas height as a multiple of the viewport
+        const ZOOM = 0.9; // pull everything back a little (zoomed-out feel)
+
+        const root = document.documentElement;
+
+        function fit() {
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          if (vw >= BP) {
+            const scale = Math.min(vw / NATIVE_W, (vh * HEIGHT_CAP) / NATIVE_H) * ZOOM;
+            root.style.setProperty('--canvas-scale', String(scale));
+            root.style.setProperty('--section-min', Math.max(vh, NATIVE_H * scale) + 'px');
+          } else {
+            root.style.setProperty('--canvas-scale', '1');
+            root.style.removeProperty('--section-min');
+          }
+        }
+
+        fit();
+        window.addEventListener('resize', fit);
+        window.addEventListener('orientationchange', fit);
+        window.addEventListener('load', fit);
+      })();
+    </script>
+  </body>
+</html>

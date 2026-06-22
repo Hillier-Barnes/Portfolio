@@ -1,0 +1,91 @@
+---
+// Section 4 — Personal / "Who is Sosaiah?" (Figma frame 72:81, PAGE 04)
+---
+
+<section id="personal" class="frame frame--alt">
+  <div class="canvas">
+    <!-- Portrait -->
+    <img class="abs portrait" src="/images/image22.png" alt="Sosaiah"
+      style="left:0;top:55px;width:478px;height:845px" />
+
+    <!-- Title -->
+    <div class="title">
+      <h2 class="heading abs" data-parallax="left" style="left:692px;top:98px">WHO</h2>
+      <h2 class="heading abs" data-parallax="right" style="left:868px;top:98px">IS</h2>
+      <h2 class="heading abs" style="left:854px;top:151px">SOSAIAH?</h2>
+    </div>
+
+    <!-- Goals -->
+    <div class="group">
+      <h2 class="heading abs" style="left:591px;top:292px">GOALS</h2>
+      <p class="abs body serif" style="left:537px;top:345px;width:262px">
+        I hope to enter the tech industry and contribute to the actualisation of fun and interesting
+        products.<br /><br />My greater goal is to have my own non-profit organisation.
+      </p>
+    </div>
+
+    <!-- Hobbies -->
+    <div class="group">
+      <h2 class="heading abs" style="left:1170px;top:501px">HOBBIES</h2>
+      <p class="abs body serif" style="left:1116px;top:554px;width:262px">
+        I love to enjoy life. I love to play sports (bouldering, soccer, basketball, boxing), read
+        philosophy, and play games with my friends (Fortnite enjoyer).
+      </p>
+    </div>
+
+    <!-- Design note -->
+    <p class="abs body serif" style="left:690px;top:695px;width:262px">
+      I would love to be able to design unique and artistic websites. Though I am not
+      <span class="serif-bold">yet</span> very good at it.
+    </p>
+
+    <!-- Snapshot + see more -->
+    <div class="aside">
+      <img class="abs snapshot" src="/images/image23.png" alt=""
+        style="left:843px;top:372px;width:233px;height:155px" />
+      <p class="abs see-more" style="left:1125px;top:636px;width:243px">
+        <span class="type-bold see-more-top">want to see more?</span><br />
+        <span class="see-more-sub">(don’t click, website under construction)</span>
+      </p>
+    </div>
+
+    <p class="page-num" style="left:1352px;top:867px">PAGE 04</p>
+  </div>
+</section>
+
+<style>
+  .heading { width: auto; white-space: nowrap; }
+  .portrait,
+  .snapshot { object-fit: cover; opacity: 0.8; }
+  .body { font-size: 16px; line-height: normal; color: var(--ink); }
+  .see-more { text-align: center; color: var(--ink); }
+  .see-more-top { font-size: 16px; }
+  .see-more-sub { font-family: var(--font-type); font-weight: 400; font-size: 12px; }
+
+  .title,
+  .group,
+  .aside { display: contents; }
+
+  @media (max-width: 1023px) {
+    .title {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 14px;
+    }
+    .group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .aside {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .portrait { aspect-ratio: 478 / 845; max-width: 300px; margin: 0 auto; }
+    .snapshot { aspect-ratio: 233 / 155; max-width: 260px; }
+    .body { font-size: 16px; line-height: 1.55; }
+    .see-more { width: auto !important; }
+  }
+</style>

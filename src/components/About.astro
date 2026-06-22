@@ -1,0 +1,70 @@
+---
+// Section 3 — About (Figma frame 72:128, PAGE 03)
+---
+
+<section id="about" class="frame frame--cream">
+  <div class="canvas">
+    <!-- Experience -->
+    <div class="group">
+      <h2 class="heading abs" style="left:153px;top:315px;width:300px">EXPERIENCE</h2>
+      <div class="abs body" style="left:82px;top:390px;width:344px">
+        <p><span class="serif-bold">Website Development</span><br /><span class="serif">Work Integrated Learning Project</span></p>
+        <p class="serif">Project for IEC Professional</p>
+      </div>
+      <p class="abs body serif justify" style="left:81px;top:460px;width:359px">
+        As a team of four, we <span class="serif-bold">partnered with Dr. Peter Beven</span> of IEC
+        Professional to build Credentials Cloud, an <span class="serif-bold">AI-powered web app that
+        maps course content against the international SFIA (Skills Framework for the Information Age)
+        standards.</span> As <span class="serif-bold">project lead</span>, I served as the primary
+        client liaison, translating high-level feedback into actionable dev tasks, and led the initial
+        UI implementation and integration of the OpenAI API (GPT-5-nano), collaborating with the team
+        to iterate and resolve issues throughout.
+      </p>
+    </div>
+
+    <!-- Education -->
+    <div class="group">
+      <h2 class="heading abs" style="left:562px;top:315px;width:300px">EDUCATION</h2>
+      <div class="abs body" style="left:516px;top:391px;width:344px">
+        <p class="serif-bold">Queensland University of Technology (2022-2026)</p>
+        <p class="serif">Bachelor of Information Technology<br />Major in Computer Science</p>
+        <p class="serif">Minor in Network Security</p>
+      </div>
+    </div>
+
+    <!-- About me -->
+    <div class="group">
+      <h2 class="heading abs" style="left:943px;top:96px;width:300px">ABOUT ME</h2>
+      <p class="abs body serif" style="left:943px;top:161px;width:425px">
+        I have recently completed my Bachelor’s Degree of Information Technology with a major in
+        Computer Science. I am eager to enter the industry and look forward to learn and grow within
+        my position whilst doing all I can to contribute towards a successful team. I have always
+        leaned towards backend development but have recently discovered a passion for design.
+      </p>
+      <img class="abs about-img" src="/images/image21.png" alt=""
+        style="left:942px;top:303px;width:425px;height:526px" />
+    </div>
+
+    <p class="page-num" style="left:1352px;top:867px">PAGE 03</p>
+  </div>
+</section>
+
+<style>
+  .about-img { object-fit: cover; opacity: 0.8; }
+  .body { font-size: 16px; line-height: normal; color: var(--ink); }
+  .body p { margin-bottom: 0; }
+  .justify { text-align: justify; }
+
+  .group { display: contents; }
+
+  @media (max-width: 1023px) {
+    .group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .body { font-size: 16px; line-height: 1.55; }
+    .body p { margin-bottom: 8px; }
+    .about-img { aspect-ratio: 425 / 526; max-width: 360px; }
+  }
+</style>

@@ -1,0 +1,176 @@
+---
+// Section 2 — Work (Figma frame 106:2). Renumbered PAGE 02 (Figma WIP labelled 03).
+---
+
+<section id="work" class="frame frame--alt">
+  <div class="canvas">
+    <!-- YourTube -->
+    <div class="project">
+      <img class="abs work-img" src="/images/yourtube.png" alt="YourTube project preview"
+        style="left:273px;top:201px;width:361px;height:235px" />
+      <h2 class="heading abs" style="left:281px;top:450px;width:300px">YOURTUBE</h2>
+      <p class="abs body serif" style="left:281px;top:512px;width:344px">
+        <span class="serif-bold">React + Node AWS Hosted web app</span><br /><br />
+        A secure and scalable AWS-hosted web application built using React.js and Node.js.
+        Allows users to upload and transcode videos, feature to search YouTube for relevant content.
+      </p>
+    </div>
+
+    <!-- Credentials Cloud (image opens the demo video) -->
+    <div class="project">
+      <div class="abs cc-media cc-trigger" data-cc-video role="button" tabindex="0"
+        aria-label="Credentials Cloud — play demo video"
+        style="left:777px;top:201px;width:357px;height:235px">
+        <img class="cc-media-img" src="/images/cc-poster.png" alt="Credentials Cloud project" />
+        <span class="cc-play" aria-hidden="true">
+          <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="40" cy="40" r="39" fill="#1a160d" />
+            <path d="M32 25 L32 55 L57 40 Z" fill="#f6f5ea" />
+          </svg>
+        </span>
+      </div>
+      <h2 class="heading abs" style="left:776px;top:450px;width:420px">CREDENTIALS CLOUD</h2>
+      <p class="abs body serif" style="left:777px;top:512px;width:344px">
+        <span class="serif-bold">Vite + React AI-powered web app</span><br /><br />
+        An AI-powered web application that maps individual capabilities against the international
+        SFIA (Skills Framework for the Information Age) framework to provide organisations with
+        data-driven insights for hiring, training, and resource allocation.
+      </p>
+    </div>
+
+    <p class="page-num" style="left:1352px;top:867px">PAGE 02</p>
+  </div>
+
+  <!-- Video lightbox (outside .canvas so position:fixed isn't broken by its transform) -->
+  <div class="cc-lightbox" id="cc-lightbox" aria-hidden="true">
+    <button class="cc-close" type="button" aria-label="Close video">
+      Close<span class="cc-x" aria-hidden="true">&times;</span>
+    </button>
+    <video class="cc-video" controls playsinline preload="none" poster="/images/cc-poster.png" src="/images/cc-demo.mp4"></video>
+  </div>
+</section>
+
+<style>
+  .heading { font-size: 36px; letter-spacing: -1.8px; }
+  .work-img { object-fit: cover; opacity: 1; z-index: 6; }
+  .body { font-size: 16px; line-height: normal; color: var(--ink); }
+
+  .project { display: contents; }
+
+  /* Credentials Cloud media (image + faint play overlay) */
+  .cc-media { z-index: 6; overflow: hidden; cursor: pointer; }
+  .cc-media-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cc-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .cc-play svg {
+    width: 60px;
+    height: 60px;
+    opacity: 0.5;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.25));
+  }
+  .cc-media:hover .cc-play svg,
+  .cc-media:focus-visible .cc-play svg { opacity: 0.85; transform: scale(1.06); }
+  .cc-media:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  /* Video lightbox */
+  .cc-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4vmin;
+    background: rgba(26, 22, 13, 0.82);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+  .cc-lightbox.open { opacity: 1; visibility: visible; }
+  .cc-video {
+    width: auto;
+    height: auto;
+    max-width: min(1280px, 92vw);
+    max-height: 86vh;
+    background: #000;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+  .cc-close {
+    position: absolute;
+    top: 26px;
+    right: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 2px;
+    border: 0;
+    background: none;
+    color: var(--cream);
+    font-family: var(--font-sans);
+    font-weight: 300;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .cc-close .cc-x { font-size: 20px; line-height: 1; font-weight: 400; }
+  .cc-close:hover { opacity: 0.6; }
+
+  @media (max-width: 1023px) {
+    .project {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .work-img { aspect-ratio: 361 / 235; object-fit: cover; position: relative !important; z-index: 6; }
+    .cc-media {
+      position: relative !important;
+      z-index: 6;
+      width: 100% !important;
+      height: auto !important;
+    }
+    .body { font-size: 16px; line-height: 1.55; }
+  }
+</style>
+
+<script>
+  const lb = document.getElementById('cc-lightbox');
+  const video = lb?.querySelector('video') as HTMLVideoElement | null;
+  if (lb && video) {
+    const open = () => {
+      lb.classList.add('open');
+      lb.setAttribute('aria-hidden', 'false');
+      video.play().catch(() => {});
+    };
+    const close = () => {
+      lb.classList.remove('open');
+      lb.setAttribute('aria-hidden', 'true');
+      video.pause();
+    };
+    document.querySelectorAll<HTMLElement>('[data-cc-video]').forEach((el) => {
+      el.addEventListener('click', open);
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          open();
+        }
+      });
+    });
+    lb.querySelector('.cc-close')?.addEventListener('click', close);
+    lb.addEventListener('click', (e) => {
+      if (e.target === lb) close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lb.classList.contains('open')) close();
+    });
+  }
+</script>

@@ -1,0 +1,61 @@
+---
+// Section 5 — Contact (Figma frame 72:155, PAGE 05)
+const icons = [505, 604, 703];
+---
+
+<section id="contact" class="frame frame--cream">
+  <div class="canvas">
+    <h2 class="heading abs" style="left:478px;top:121px;width:460px">YOU MADE IT TO THE END</h2>
+
+    <div class="contact-lines">
+      <p class="abs line serif-bold" style="left:485px;top:181px;width:238px">I hope you enjoyed</p>
+      <p class="abs line serif" style="left:485px;top:213px;width:238px">Contact me below</p>
+
+      <a class="abs line serif link" href="mailto:sosaiah.dev@outlook.com" style="left:485px;top:245px;width:426px">Mail: sosaiah.dev@outlook.com</a>
+      <a class="abs line serif link" href="tel:+61421323311" style="left:485px;top:277px;width:321px">Call: +61 421 323 311</a>
+      <a class="abs line serif link" href="https://www.linkedin.com/in/sosaiah-hillier-barnes-051041211/" target="_blank" rel="noopener" style="left:485px;top:309px;width:321px">Linkedin</a>
+      <a class="abs line serif link" href="https://github.com/hillier-barnes" target="_blank" rel="noopener" style="left:485px;top:341px;width:321px">GitHub</a>
+
+      <p class="abs line build type" style="left:485px;top:373px;width:277px">Let’s build something</p>
+    </div>
+
+    <!-- Social icons (placeholder art from Figma) -->
+    <div class="socials">
+      {
+        icons.map((top) => (
+          <img class="abs social" src="/images/image24.png" alt=""
+            style={`left:1306px;top:${top}px;width:82.97px;height:82.97px`} />
+        ))
+      }
+    </div>
+
+    <p class="page-num" style="left:1352px;top:867px">PAGE 05</p>
+  </div>
+</section>
+
+<style>
+  .line { font-size: 20px; line-height: normal; color: var(--ink); }
+  .link { transition: opacity 0.15s ease; }
+  .link:hover { opacity: 0.55; text-decoration: underline; }
+  .build { font-weight: 600; }
+  .social { object-fit: cover; opacity: 0.8; }
+
+  .contact-lines,
+  .socials { display: contents; }
+
+  @media (max-width: 1023px) {
+    .contact-lines {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .line { font-size: 18px; }
+    .socials {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .socials .social { width: 60px !important; height: 60px !important; flex: none; aspect-ratio: 1; }
+  }
+</style>

@@ -1,0 +1,57 @@
+---
+// Global mobile header — fixed hamburger that opens a full-screen menu.
+// Hidden on desktop (>=1024px) where the per-section top nav is shown instead.
+const links = [
+  { num: '01', label: 'Work', id: 'work' },
+  { num: '02', label: 'About', id: 'about' },
+  { num: '03', label: 'Personal', id: 'personal' },
+  { num: '04', label: 'Contact', id: 'contact' },
+];
+---
+
+<header class="mobile-header">
+  <a class="mh-brand" href="#top">SAIA*</a>
+  <button
+    class="mh-toggle"
+    id="mh-toggle"
+    aria-label="Open menu"
+    aria-expanded="false"
+    aria-controls="mobile-menu"
+  >
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<nav id="mobile-menu" class="mobile-menu" aria-hidden="true">
+  {
+    links.map((link) => (
+      <a href={`#${link.id}`} data-menu-link>
+        <span class="num">{link.num}</span>{link.label}
+      </a>
+    ))
+  }
+</nav>
+
+<script is:inline>
+  (function () {
+    const toggle = document.getElementById('mh-toggle');
+    const menu = document.getElementById('mobile-menu');
+    if (!toggle || !menu) return;
+
+    function setOpen(open) {
+      menu.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      menu.setAttribute('aria-hidden', String(!open));
+      document.body.classList.toggle('menu-open', open);
+    }
+
+    toggle.addEventListener('click', () => setOpen(!menu.classList.contains('open')));
+    menu.querySelectorAll('[data-menu-link]').forEach((a) =>
+      a.addEventListener('click', () => setOpen(false))
+    );
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    });
+  })();
+</script>

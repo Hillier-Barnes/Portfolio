@@ -1,0 +1,232 @@
+---
+// Scroll effects: horizontal slide-in parallax on imagery (desktop) + a
+// typewriter reveal on the section headers, typed one at a time in the order
+// they enter the viewport. Respects prefers-reduced-motion.
+---
+
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const CHAR_MS = 80; // base per-character delay (slower); jittered below
+
+  /* ---- Typewriter reveal ----------------------------------------------- */
+  function wrapChars(el: HTMLElement) {
+    const walk = (node: Node) => {
+      Array.from(node.childNodes).forEach((child) => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          const frag = document.createDocumentFragment();
+          for (const ch of child.textContent ?? '') {
+            const span = document.createElement('span');
+            span.className = 'type-char is-pending';
+            span.textContent = ch;
+            frag.appendChild(span);
+          }
+          node.replaceChild(frag, child);
+        } else if (child.nodeType === Node.ELEMENT_NODE && (child as HTMLElement).tagName !== 'BR') {
+          walk(child);
+        }
+      });
+    };
+    walk(el);
+    const chars = Array.from(el.querySelectorAll<HTMLElement>('.type-char'));
+    // Drop leading/trailing whitespace spans (template indentation) so typing
+    // starts on the first real character; internal spaces are kept.
+    while (chars.length && !chars[0].textContent?.trim()) chars.shift()!.remove();
+    while (chars.length && !chars[chars.length - 1].textContent?.trim()) chars.pop()!.remove();
+
+    const caret = document.createElement('span');
+    caret.className = 'type-caret is-pending';
+    caret.setAttribute('aria-hidden', 'true');
+    caret.textContent = '|';
+    el.appendChild(caret);
+    return { chars, caret };
+  }
+
+  function typeOne(item: { chars: HTMLElement[]; caret: HTMLElement }): Promise<void> {
+    return new Promise((resolve) => {
+      const { chars, caret } = item;
+      // Start the caret at the head of the text, then move it to follow each
+      // typed character so it stays on the correct line (e.g. across the <br>).
+      chars[0].before(caret);
+      caret.classList.remove('is-pending');
+      let i = 0;
+      const tick = () => {
+        if (i >= chars.length) {
+          caret.classList.add('is-done');
+          resolve();
+          return;
+        }
+        chars[i].classList.remove('is-pending');
+        chars[i].after(caret);
+        i += 1;
+        window.setTimeout(tick, CHAR_MS + Math.random() * 50);
+      };
+      tick();
+    });
+  }
+
+  function setupTyping() {
+    // Global FIFO queue so only one thing types at a time.
+    type Item = { chars: HTMLElement[]; caret: HTMLElement; delay?: number };
+    const queue: Item[] = [];
+    let working = false;
+    async function pump() {
+      if (working) return;
+      working = true;
+      while (queue.length) {
+        const item = queue.shift()!;
+        if (item.delay) await new Promise((r) => window.setTimeout(r, item.delay));
+        await typeOne(item);
+      }
+      working = false;
+    }
+
+    const prep = (el: HTMLElement | null) => {
+      if (!el) return null;
+      el.style.minHeight = el.offsetHeight + 'px'; // reserve height (no collapse)
+      const item = wrapChars(el);
+      return item.chars.length ? item : null;
+    };
+
+    // Landing: type the hero name, then the "Really cool and nice" tagline right
+    // after it finishes. Triggered by the intro (first visit) or immediately
+    // (revisit) — see setupIntro / init.
+    const nameItem = prep(document.querySelector<HTMLElement>('.name'));
+    const taglineItem = prep(document.querySelector<HTMLElement>('.tagline'));
+    let landingStarted = false;
+    const startLanding = () => {
+      if (landingStarted || !nameItem) return;
+      landingStarted = true;
+      queue.push(nameItem);
+      if (taglineItem) queue.push({ ...taglineItem, delay: 900 });
+      pump();
+    };
+
+    // "Let's build something" on the contact page types out once the user has
+    // scrolled all the way to the bottom of the page (scrolling complete).
+    const build = document.querySelector<HTMLElement>('.build');
+    if (build) {
+      build.style.minHeight = build.offsetHeight + 'px';
+      const item = wrapChars(build);
+      if (item.chars.length) {
+        let fired = false;
+        const checkBottom = () => {
+          if (fired) return;
+          const atBottom =
+            window.innerHeight + window.scrollY >=
+            document.documentElement.scrollHeight - 2;
+          if (atBottom) {
+            fired = true;
+            window.removeEventListener('scroll', checkBottom);
+            queue.push(item);
+            pump();
+          }
+        };
+        window.addEventListener('scroll', checkBottom, { passive: true });
+        checkBottom();
+      }
+    }
+
+    return startLanding;
+  }
+
+  /* ---- Landing intro: masked clip reveals, then start typing ------------ */
+  function setupIntro(startLanding: () => void) {
+    const root = document.documentElement;
+    if (!root.classList.contains('intro')) {
+      // Revisit / no intro — just type.
+      startLanding();
+      return;
+    }
+
+    const q = (sel: string) => Array.from(document.querySelectorAll<HTMLElement>('#top ' + sel));
+    const heroImgs = q('.hero-img');
+    const navLinks = q('.lnav');
+    const blurb = q('.blurb');
+    const markers = [...q('.scroll-hint'), ...q('.page-num')];
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'power3.out' },
+      onComplete: () => root.classList.remove('intro'), // clears the CSS hidden states
+    });
+    tl.fromTo(heroImgs,
+      { clipPath: 'inset(100% 0 0 0)' },
+      { clipPath: 'inset(0% 0 0 0)', duration: 1.3, stagger: 0.22 }, 0);
+    tl.fromTo(blurb,
+      { clipPath: 'inset(0 0 100% 0)' },
+      { clipPath: 'inset(0 0 0% 0)', duration: 1.15 }, 0.4);
+    tl.fromTo(navLinks,
+      { clipPath: 'inset(0 0 100% 0)', opacity: 0, y: 18 },
+      { clipPath: 'inset(0 0 0% 0)', opacity: 1, y: 0, duration: 1, stagger: 0.13 }, 0.7);
+    tl.fromTo(markers,
+      { opacity: 0, y: 12 },
+      { opacity: 1, y: 0, duration: 0.9 }, 1.4);
+
+    // Start the name typing partway through (overlaps the tail of the reveal)
+    // so there's little delay before it begins.
+    tl.call(startLanding, [], 1.8);
+
+    // Safety: if something stalls, still start typing + clear hidden states.
+    window.setTimeout(() => { root.classList.remove('intro'); startLanding(); }, 6000);
+  }
+
+  /* ---- Horizontal slide-in parallax (desktop only) --------------------- */
+  function setupParallax() {
+    const mm = gsap.matchMedia();
+    mm.add('(min-width: 1024px)', () => {
+      gsap.utils.toArray<HTMLElement>('.frame').forEach((section) => {
+        // Images, section headers, and the Credentials Cloud media block (image +
+        // play overlay, animated as one unit) slide in horizontally from their side.
+        section
+          .querySelectorAll<HTMLElement>('.canvas img:not(.cc-media-img), .heading, .cc-media')
+          .forEach((el) => {
+            const rect = el.getBoundingClientRect();
+            // Direction defaults to the element's side; `data-parallax` can override.
+            const dir = el.dataset.parallax;
+            const fromLeft =
+              dir === 'left' ? true : dir === 'right' ? false : rect.left + rect.width / 2 < window.innerWidth / 2;
+
+            const fromX = fromLeft ? -85 : 85;
+
+            // Settle at the element's own CSS opacity (images are 0.8 by default,
+            // text 1; .work-img / .cc-media override to 1).
+            const targetAlpha = parseFloat(getComputedStyle(el).opacity) || 1;
+
+          gsap.fromTo(
+            el,
+            { xPercent: fromX, autoAlpha: 0 },
+            {
+              xPercent: 0,
+              autoAlpha: targetAlpha,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: section,
+                start: 'top bottom',
+                end: 'center 65%',
+                scrub: true,
+              },
+            }
+          );
+        });
+      });
+    });
+  }
+
+  function init() {
+    if (reduceMotion) return;
+    const startLanding = setupTyping();
+    setupIntro(startLanding);
+    setupParallax();
+    window.addEventListener('load', () => ScrollTrigger.refresh());
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+</script>
