@@ -113,21 +113,21 @@
       build.style.minHeight = build.offsetHeight + 'px';
       const item = wrapChars(build);
       if (item.chars.length) {
+        // Type as soon as the line scrolls into view (minimal delay). A scroll
+        // check on the element's own rect is reliable here — a ScrollTrigger
+        // mis-measures absolutely-positioned elements inside the scaled canvas.
         let fired = false;
-        const checkBottom = () => {
+        const check = () => {
           if (fired) return;
-          const atBottom =
-            window.innerHeight + window.scrollY >=
-            document.documentElement.scrollHeight - 2;
-          if (atBottom) {
+          if (build.getBoundingClientRect().top < window.innerHeight * 0.92) {
             fired = true;
-            window.removeEventListener('scroll', checkBottom);
+            window.removeEventListener('scroll', check);
             queue.push(item);
             pump();
           }
         };
-        window.addEventListener('scroll', checkBottom, { passive: true });
-        checkBottom();
+        window.addEventListener('scroll', check, { passive: true });
+        check();
       }
     }
 
