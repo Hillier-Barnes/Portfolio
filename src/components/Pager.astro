@@ -1,0 +1,282 @@
+---
+// Desktop "continuous sections" pager — GSAP Observer drives full-screen,
+// one-section-per-gesture paging with a masked outer/inner reveal, character
+// stagger on headings, content parallax, and a continuous loop. Adapted from
+// GreenSock's "Animated Continuous Sections" demo. Only runs when <html> has
+// the `paged` class (desktop, motion-OK); mobile keeps normal scrolling.
+---
+
+<script>
+  import gsap from 'gsap';
+  import { Observer } from 'gsap/Observer';
+
+  gsap.registerPlugin(Observer);
+
+  function init() {
+    const root = document.documentElement;
+    if (!root.classList.contains('paged')) return;
+
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('main .frame'));
+    if (sections.length < 2) return;
+    const ids = sections.map((s) => s.id);
+
+    // Wrap each section's canvas in mask wrappers (outer slides up, inner down).
+    sections.forEach((sec) => {
+      const canvas = sec.querySelector<HTMLElement>('.canvas');
+      if (!canvas) return;
+      const outer = document.createElement('div');
+      outer.className = 'pg-outer';
+      const inner = document.createElement('div');
+      inner.className = 'pg-inner';
+      outer.appendChild(inner);
+      inner.appendChild(canvas);
+      sec.insertBefore(outer, sec.firstChild);
+    });
+
+    // Split section headings into characters for the stagger reveal.
+    const splitChars = (el: HTMLElement): HTMLElement[] => {
+      const out: HTMLElement[] = [];
+      const walk = (node: Node) => {
+        Array.from(node.childNodes).forEach((child) => {
+          if (child.nodeType === Node.TEXT_NODE) {
+            const frag = document.createDocumentFragment();
+            for (const ch of child.textContent ?? '') {
+              const s = document.createElement('span');
+              s.className = 'pg-char';
+              s.textContent = ch;
+              frag.appendChild(s);
+              out.push(s);
+            }
+            node.replaceChild(frag, child);
+          } else if (child.nodeType === Node.ELEMENT_NODE && (child as HTMLElement).tagName !== 'BR') {
+            walk(child);
+          }
+        });
+      };
+      walk(el);
+      // drop leading/trailing whitespace chars (template indentation)
+      while (out.length && !out[0].textContent?.trim()) out.shift();
+      while (out.length && !out[out.length - 1].textContent?.trim()) out.pop();
+      return out;
+    };
+
+    const outers = sections.map((s) => s.querySelector<HTMLElement>('.pg-outer'));
+    const inners = sections.map((s) => s.querySelector<HTMLElement>('.pg-inner'));
+    const canvases = sections.map((s) => s.querySelector<HTMLElement>('.canvas'));
+    // Landing (index 0) types its name + tagline instead of the char stagger.
+    const charsBy = sections.map((s, idx) =>
+      Array.from(s.querySelectorAll<HTMLElement>(idx === 0 ? '.heading' : '.name, .heading')).flatMap(splitChars)
+    );
+
+    // ---- Typewriter (landing name + tagline) -----------------------------
+    type TypeItem = { chars: HTMLElement[]; caret: HTMLElement; delay?: number };
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    function wrapTypeChars(el: HTMLElement): TypeItem {
+      const walk = (node: Node) => {
+        Array.from(node.childNodes).forEach((child) => {
+          if (child.nodeType === Node.TEXT_NODE) {
+            const frag = document.createDocumentFragment();
+            for (const ch of child.textContent ?? '') {
+              const s = document.createElement('span');
+              s.className = 'type-char is-pending';
+              s.textContent = ch;
+              frag.appendChild(s);
+            }
+            node.replaceChild(frag, child);
+          } else if (child.nodeType === Node.ELEMENT_NODE && (child as HTMLElement).tagName !== 'BR') {
+            walk(child);
+          }
+        });
+      };
+      walk(el);
+      const chars = Array.from(el.querySelectorAll<HTMLElement>('.type-char'));
+      while (chars.length && !chars[0].textContent?.trim()) chars.shift()!.remove();
+      while (chars.length && !chars[chars.length - 1].textContent?.trim()) chars.pop()!.remove();
+      const caret = document.createElement('span');
+      caret.className = 'type-caret is-pending';
+      caret.setAttribute('aria-hidden', 'true');
+      caret.textContent = '|';
+      el.appendChild(caret);
+      return { chars, caret };
+    }
+    function typeOne(item: TypeItem): Promise<void> {
+      return new Promise((resolve) => {
+        const { chars, caret } = item;
+        if (!chars.length) return resolve();
+        chars[0].before(caret);
+        caret.classList.remove('is-pending');
+        let i = 0;
+        const tick = () => {
+          if (i >= chars.length) { caret.classList.add('is-done'); return resolve(); }
+          chars[i].classList.remove('is-pending');
+          chars[i].after(caret);
+          i += 1;
+          window.setTimeout(tick, 80 + Math.random() * 50);
+        };
+        tick();
+      });
+    }
+    const prepType = (el: HTMLElement | null) => {
+      if (!el) return null;
+      el.style.minHeight = el.offsetHeight + 'px';
+      const it = wrapTypeChars(el);
+      return it.chars.length ? it : null;
+    };
+    const nameItem = prepType(sections[0].querySelector<HTMLElement>('.name'));
+    const taglineItem = prepType(sections[0].querySelector<HTMLElement>('.tagline'));
+    let landingTyped = false;
+    async function playLandingType() {
+      if (landingTyped) return;
+      landingTyped = true;
+      if (nameItem) await typeOne(nameItem);
+      if (taglineItem) { await wait(900); await typeOne(taglineItem); }
+    }
+
+    gsap.set(outers, { yPercent: 100 });
+    gsap.set(inners, { yPercent: -100 });
+    gsap.set(sections, { autoAlpha: 0 });
+
+    // Navbar chrome (the Pager owns it in paged mode).
+    const nav = document.querySelector<HTMLElement>('.site-nav');
+    const navLinks = new Map<string, HTMLElement>();
+    document.querySelectorAll<HTMLElement>('.site-nav__links a').forEach((a) => {
+      navLinks.set(a.dataset.nav || '', a);
+    });
+    const syncChrome = (i: number) => {
+      if (nav) nav.classList.toggle('is-visible', i > 0);
+      navLinks.forEach((a) => a.classList.remove('is-active'));
+      const active = navLinks.get(ids[i]);
+      if (active) active.classList.add('is-active');
+    };
+
+    let currentIndex = -1;
+    let animating = false;
+    const wrap = gsap.utils.wrap(0, sections.length);
+
+    function gotoSection(index: number, direction: number) {
+      index = wrap(index);
+      if (animating || index === currentIndex) return;
+      animating = true;
+      const dFactor = direction === -1 ? -1 : 1;
+      const tl = gsap.timeline({
+        defaults: { duration: 1.15, ease: 'power1.inOut' },
+        onComplete: () => {
+          animating = false;
+        },
+      });
+
+      if (currentIndex >= 0) {
+        gsap.set(sections[currentIndex], { zIndex: 0 });
+        tl.to(canvases[currentIndex], { yPercent: -12 * dFactor }, 0).set(
+          sections[currentIndex],
+          { autoAlpha: 0 }
+        );
+      }
+
+      gsap.set(sections[index], { autoAlpha: 1, zIndex: 1 });
+      tl.fromTo(
+        [outers[index], inners[index]],
+        { yPercent: (i: number) => (i ? -100 * dFactor : 100 * dFactor) },
+        { yPercent: 0 },
+        0
+      )
+        .fromTo(canvases[index], { yPercent: 12 * dFactor }, { yPercent: 0 }, 0)
+        .fromTo(
+          charsBy[index],
+          { autoAlpha: 0, yPercent: 120 * dFactor },
+          {
+            autoAlpha: 1,
+            yPercent: 0,
+            duration: 1,
+            ease: 'power2',
+            stagger: { each: 0.018, from: 'random' },
+          },
+          0.15
+        );
+
+      // Landing types its name + tagline as it reveals (once).
+      if (index === 0) tl.call(() => { playLandingType(); }, [], 0.9);
+
+      currentIndex = index;
+      syncChrome(index);
+    }
+
+    // ---- Input -----------------------------------------------------------
+    Observer.create({
+      type: 'wheel,touch',
+      wheelSpeed: -1,
+      onDown: () => !animating && gotoSection(currentIndex - 1, -1),
+      onUp: () => !animating && gotoSection(currentIndex + 1, 1),
+      tolerance: 10,
+      preventDefault: true,
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (['ArrowDown', 'PageDown', ' '].includes(e.key)) {
+        e.preventDefault();
+        gotoSection(currentIndex + 1, 1);
+      } else if (['ArrowUp', 'PageUp'].includes(e.key)) {
+        e.preventDefault();
+        gotoSection(currentIndex - 1, -1);
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        gotoSection(0, -1);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        gotoSection(sections.length - 1, 1);
+      }
+    });
+
+    // In-page hash links page to that section instead of scrolling.
+    document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
+      const idx = ids.indexOf(a.getAttribute('href')!.slice(1));
+      if (idx === -1) return;
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!animating) gotoSection(idx, idx > currentIndex ? 1 : -1);
+      });
+    });
+
+    // ---- Curtain pre-roll, then reveal section 0 -------------------------
+    const start = () => gotoSection(0, 1);
+    const curtain = document.getElementById('curtain');
+    if (root.classList.contains('intro') && curtain) {
+      const countEl = document.getElementById('curtain-count');
+      const brand = curtain.querySelector('.curtain__brand');
+      const pt = curtain.querySelector('.curtain__panel--top');
+      const pb = curtain.querySelector('.curtain__panel--bottom');
+      const markPlayed = () => {
+        try { sessionStorage.setItem('introPlayed', '1'); } catch (e) {}
+      };
+      const count = { v: 0 };
+      const tl = gsap.timeline({ onComplete: () => { root.classList.remove('intro'); markPlayed(); } });
+      tl.to(count, {
+        v: 100, duration: 1.1, ease: 'power1.inOut',
+        onUpdate: () => { if (countEl) countEl.textContent = String(Math.round(count.v)).padStart(3, '0'); },
+      }, 0);
+      tl.to(brand, { opacity: 0, duration: 0.35, ease: 'power2.in' }, 1.15);
+      tl.to(pt, { yPercent: -100, duration: 1.0, ease: 'power4.inOut' }, 1.35);
+      tl.to(pb, { yPercent: 100, duration: 1.0, ease: 'power4.inOut' }, 1.35);
+      tl.call(start, [], 1.6); // reveal first section as the curtain lifts
+      // Safety: only force-start if the reveal never ran (don't yank back later).
+      window.setTimeout(() => { if (currentIndex === -1) { root.classList.remove('intro'); start(); } }, 6000);
+    } else {
+      start();
+    }
+
+    // Switch modes if the viewport crosses the breakpoint.
+    let rt: number | undefined;
+    window.addEventListener('resize', () => {
+      window.clearTimeout(rt);
+      rt = window.setTimeout(() => {
+        if (!window.matchMedia('(min-width: 1024px)').matches) window.location.reload();
+      }, 250);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+</script>

@@ -239,6 +239,8 @@
 
   function init() {
     if (reduceMotion) return;
+    // Desktop paged mode (Pager.astro) owns the intro, reveals and navbar.
+    if (document.documentElement.classList.contains('paged')) return;
     const startLanding = setupTyping();
     setupIntro(startLanding);
     setupParallax();

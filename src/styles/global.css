@@ -135,6 +135,17 @@ img { display: block; }
   opacity: 0;
   transition: transform 0.35s ease, opacity 0.35s ease;
   pointer-events: none;
+  overflow: hidden;
+}
+/* Same paper grain over the navbar so it matches the page. */
+.site-nav::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.34;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='gamma' amplitude='1' exponent='3' offset='0'/%3E%3C/feComponentTransfer%3E%3CfeGaussianBlur stdDeviation='0.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
 }
 .site-nav.is-visible {
   transform: none;
@@ -381,4 +392,52 @@ html.intro .curtain {
   font-size: 13px;
   letter-spacing: 3px;
   color: var(--ink);
+}
+
+/* ---------------------------------------------------------------------------
+   Paged mode (desktop) — GSAP Observer "continuous sections". Each section is a
+   stacked full-screen page; Pager.astro drives the masked outer/inner reveal.
+   Mobile (no `paged` class) keeps normal scrolling.
+--------------------------------------------------------------------------- */
+@media (min-width: 1024px) {
+  html.paged,
+  html.paged body {
+    height: 100%;
+    overflow: hidden;
+  }
+  html.paged main {
+    position: fixed;
+    inset: 0;
+  }
+  html.paged .frame {
+    position: absolute;
+    inset: 0;
+    min-height: 0;
+    height: 100%;
+    visibility: hidden; /* gsap autoAlpha shows the active section */
+    background: transparent; /* bg moves into the mask so it wipes in */
+  }
+  html.paged .pg-outer,
+  html.paged .pg-inner {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    will-change: transform;
+  }
+  html.paged .pg-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Section background lives on the masked layer so the outgoing section stays
+     visible underneath as the incoming one wipes in. */
+  html.paged .frame--cream .pg-inner { background: var(--cream); }
+  html.paged .frame--alt .pg-inner { background: var(--cream-alt); }
+  html.paged .pg-char {
+    display: inline-block;
+    white-space: pre;
+    will-change: transform, opacity;
+  }
 }

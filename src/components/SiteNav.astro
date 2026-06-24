@@ -20,6 +20,8 @@ const links = [
 
 <script is:inline>
   function initSiteNav() {
+    // In paged mode (desktop), Pager.astro drives the navbar; skip scrollspy.
+    if (document.documentElement.classList.contains('paged')) return;
     const nav = document.querySelector('.site-nav');
     const landing = document.getElementById('top');
     const sections = ['work', 'about', 'personal', 'contact']
