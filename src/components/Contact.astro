@@ -1,6 +1,10 @@
 ---
 // Section 5 — Contact (Figma frame 72:155, PAGE 05)
-const icons = [505, 604, 703];
+const icons = [
+  { top: 505, src: '/images/city.PNG' },
+  { top: 604, src: '/images/pc.JPG' },
+  { top: 703, src: '/images/boogie.jpg' },
+];
 ---
 
 <section id="contact" class="frame frame--cream">
@@ -23,9 +27,9 @@ const icons = [505, 604, 703];
     <!-- Social icons (placeholder art from Figma) -->
     <div class="socials">
       {
-        icons.map((top) => (
-          <img class="abs social" src="/images/image24.png" alt=""
-            style={`left:1306px;top:${top}px;width:82.97px;height:82.97px`} />
+        icons.map((icon) => (
+          <img class="abs social" src={icon.src} alt=""
+            style={`left:1306px;top:${icon.top}px;width:82.97px;height:82.97px`} />
         ))
       }
     </div>
