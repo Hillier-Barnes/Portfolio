@@ -11,7 +11,8 @@
   gsap.registerPlugin(ScrollTrigger);
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const CHAR_MS = 80; // base per-character delay (slower); jittered below
+  const CHAR_MS = 42; // base per-character delay (tagline, contact line); jittered below
+  const HEADER_MS = 72; // slower per-character delay for the landing header
 
   /* ---- Typewriter reveal ----------------------------------------------- */
   function wrapChars(el: HTMLElement) {
@@ -46,9 +47,10 @@
     return { chars, caret };
   }
 
-  function typeOne(item: { chars: HTMLElement[]; caret: HTMLElement }): Promise<void> {
+  function typeOne(item: { chars: HTMLElement[]; caret: HTMLElement; charMs?: number }): Promise<void> {
     return new Promise((resolve) => {
       const { chars, caret } = item;
+      const charMs = item.charMs ?? CHAR_MS;
       // Start the caret at the head of the text, then move it to follow each
       // typed character so it stays on the correct line (e.g. across the <br>).
       chars[0].before(caret);
@@ -63,7 +65,60 @@
         chars[i].classList.remove('is-pending');
         chars[i].after(caret);
         i += 1;
-        window.setTimeout(tick, CHAR_MS + Math.random() * 50);
+        window.setTimeout(tick, charMs);
+      };
+      tick();
+    });
+  }
+
+  // Landing header, typed with a deliberate human slip: types
+  // "SOSAIAH / HILLIER-BRNES", backspaces to "HILLIER-B", then finishes
+  // "HILLIER-BARNES*". Builds its own char spans (with a following caret) and
+  // drives them on a human-jittered clock.
+  function typeHeader(el: HTMLElement, charMs: number): Promise<void> {
+    return new Promise((resolve) => {
+      el.textContent = '';
+      const line1 = document.createElement('span');
+      const line2 = document.createElement('span');
+      const br = document.createElement('br');
+      const caret = document.createElement('span');
+      caret.className = 'type-caret';
+      caret.setAttribute('aria-hidden', 'true');
+      caret.textContent = '|';
+      el.append(line1, br, line2, caret);
+
+      const put = (line: HTMLElement, ch: string) => {
+        const s = document.createElement('span');
+        s.className = 'type-char';
+        s.textContent = ch;
+        line.appendChild(s);
+        line.after(caret); // caret follows the line being typed
+      };
+      const del = (line: HTMLElement) => {
+        line.lastElementChild?.remove();
+        line.after(caret);
+      };
+
+      type Step = { fn: () => void; kind: 'type' | 'back' | 'wait'; ms?: number };
+      const steps: Step[] = [];
+      for (const ch of 'SOSAIAH') steps.push({ fn: () => put(line1, ch), kind: 'type' });
+      for (const ch of 'HILLIER-BRNES') steps.push({ fn: () => put(line2, ch), kind: 'type' });
+      steps.push({ fn: () => {}, kind: 'wait', ms: charMs * 7 }); // notice the typo
+      for (let k = 0; k < 4; k++) steps.push({ fn: () => del(line2), kind: 'back' }); // RNES -> B
+      steps.push({ fn: () => {}, kind: 'wait', ms: charMs * 3 }); // settle before retyping
+      for (const ch of 'ARNES*') steps.push({ fn: () => put(line2, ch), kind: 'type' });
+
+      let i = 0;
+      const tick = () => {
+        if (i >= steps.length) {
+          caret.classList.add('is-done');
+          resolve();
+          return;
+        }
+        const step = steps[i++];
+        step.fn();
+        const d = step.kind === 'wait' ? step.ms! : step.kind === 'back' ? charMs * 0.55 : charMs;
+        window.setTimeout(tick, d);
       };
       tick();
     });
@@ -71,7 +126,7 @@
 
   function setupTyping() {
     // Global FIFO queue so only one thing types at a time.
-    type Item = { chars: HTMLElement[]; caret: HTMLElement; delay?: number };
+    type Item = { chars?: HTMLElement[]; caret?: HTMLElement; delay?: number; charMs?: number; run?: () => Promise<void> };
     const queue: Item[] = [];
     let working = false;
     async function pump() {
@@ -80,7 +135,8 @@
       while (queue.length) {
         const item = queue.shift()!;
         if (item.delay) await new Promise((r) => window.setTimeout(r, item.delay));
-        await typeOne(item);
+        if (item.run) await item.run();
+        else await typeOne(item as { chars: HTMLElement[]; caret: HTMLElement; charMs?: number });
       }
       working = false;
     }
@@ -95,13 +151,17 @@
     // Landing: type the hero name, then the "Really cool and nice" tagline right
     // after it finishes. Triggered by the intro (first visit) or immediately
     // (revisit) — see setupIntro / init.
-    const nameItem = prep(document.querySelector<HTMLElement>('.name'));
+    const nameEl = document.querySelector<HTMLElement>('.name');
+    if (nameEl) {
+      nameEl.style.minHeight = nameEl.offsetHeight + 'px'; // reserve height (no collapse)
+      nameEl.textContent = ''; // hide the static header now so it never flashes before typing
+    }
     const taglineItem = prep(document.querySelector<HTMLElement>('.tagline'));
     let landingStarted = false;
     const startLanding = () => {
-      if (landingStarted || !nameItem) return;
+      if (landingStarted || !nameEl) return;
       landingStarted = true;
-      queue.push(nameItem);
+      queue.push({ run: () => typeHeader(nameEl, HEADER_MS) });
       if (taglineItem) queue.push({ ...taglineItem, delay: 900 });
       pump();
     };

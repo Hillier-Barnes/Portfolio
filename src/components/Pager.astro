@@ -69,7 +69,9 @@
     );
 
     // ---- Typewriter (landing name + tagline) -----------------------------
-    type TypeItem = { chars: HTMLElement[]; caret: HTMLElement; delay?: number };
+    const CHAR_MS = 42; // tagline / contact typing speed
+    const HEADER_MS = 72; // slower landing-header typing speed
+    type TypeItem = { chars: HTMLElement[]; caret: HTMLElement; delay?: number; charMs?: number };
     const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
     function wrapTypeChars(el: HTMLElement): TypeItem {
       const walk = (node: Node) => {
@@ -102,6 +104,7 @@
     function typeOne(item: TypeItem): Promise<void> {
       return new Promise((resolve) => {
         const { chars, caret } = item;
+        const charMs = item.charMs ?? CHAR_MS;
         if (!chars.length) return resolve();
         chars[0].before(caret);
         caret.classList.remove('is-pending');
@@ -111,7 +114,47 @@
           chars[i].classList.remove('is-pending');
           chars[i].after(caret);
           i += 1;
-          window.setTimeout(tick, 80 + Math.random() * 50);
+          window.setTimeout(tick, charMs);
+        };
+        tick();
+      });
+    }
+    // Landing header typed with a deliberate human slip: "SOSAIAH / HILLIER-BRNES",
+    // backspace to "HILLIER-B", then finish "HILLIER-BARNES*". Constant cadence.
+    function typeHeader(el: HTMLElement, charMs: number): Promise<void> {
+      return new Promise((resolve) => {
+        el.textContent = '';
+        const line1 = document.createElement('span');
+        const line2 = document.createElement('span');
+        const br = document.createElement('br');
+        const caret = document.createElement('span');
+        caret.className = 'type-caret';
+        caret.setAttribute('aria-hidden', 'true');
+        caret.textContent = '|';
+        el.append(line1, br, line2, caret);
+        const put = (line: HTMLElement, ch: string) => {
+          const s = document.createElement('span');
+          s.className = 'type-char';
+          s.textContent = ch;
+          line.appendChild(s);
+          line.after(caret);
+        };
+        const del = (line: HTMLElement) => { line.lastElementChild?.remove(); line.after(caret); };
+        type Step = { fn: () => void; kind: 'type' | 'back' | 'wait'; ms?: number };
+        const steps: Step[] = [];
+        for (const ch of 'SOSAIAH') steps.push({ fn: () => put(line1, ch), kind: 'type' });
+        for (const ch of 'HILLIER-BRNES') steps.push({ fn: () => put(line2, ch), kind: 'type' });
+        steps.push({ fn: () => {}, kind: 'wait', ms: charMs * 7 }); // notice the typo
+        for (let k = 0; k < 4; k++) steps.push({ fn: () => del(line2), kind: 'back' }); // RNES -> B
+        steps.push({ fn: () => {}, kind: 'wait', ms: charMs * 3 }); // settle before retyping
+        for (const ch of 'ARNES*') steps.push({ fn: () => put(line2, ch), kind: 'type' });
+        let i = 0;
+        const tick = () => {
+          if (i >= steps.length) { caret.classList.add('is-done'); return resolve(); }
+          const step = steps[i++];
+          step.fn();
+          const d = step.kind === 'wait' ? step.ms! : step.kind === 'back' ? charMs * 0.55 : charMs;
+          window.setTimeout(tick, d);
         };
         tick();
       });
@@ -122,13 +165,17 @@
       const it = wrapTypeChars(el);
       return it.chars.length ? it : null;
     };
-    const nameItem = prepType(sections[0].querySelector<HTMLElement>('.name'));
+    const nameEl = sections[0].querySelector<HTMLElement>('.name');
+    if (nameEl) {
+      nameEl.style.minHeight = nameEl.offsetHeight + 'px';
+      nameEl.textContent = ''; // hide the static header now so it never flashes before typing
+    }
     const taglineItem = prepType(sections[0].querySelector<HTMLElement>('.tagline'));
     let landingTyped = false;
     async function playLandingType() {
       if (landingTyped) return;
       landingTyped = true;
-      if (nameItem) await typeOne(nameItem);
+      if (nameEl) await typeHeader(nameEl, HEADER_MS);
       if (taglineItem) { await wait(900); await typeOne(taglineItem); }
     }
 
