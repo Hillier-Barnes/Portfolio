@@ -43,12 +43,21 @@
     <div class="aside">
       <img class="abs snapshot" src="/images/water.JPG" alt=""
         style="left:843px;top:372px;width:233px;height:155px" />
-      <p class="abs see-more" style="left:1125px;top:636px;width:243px">
+      <p class="abs see-more clip-trigger" data-clip-video role="button" tabindex="0"
+        aria-label="Play clip" style="left:1125px;top:636px;width:243px">
         <span class="type-bold see-more-top">click to see a clip</span>
       </p>
     </div>
 
     <p class="page-num" style="left:1352px;top:842px">PAGE 04</p>
+  </div>
+
+  <!-- Clip lightbox (outside .canvas so position:fixed isn't broken by its transform) -->
+  <div class="clip-lightbox" id="clip-lightbox" aria-hidden="true">
+    <button class="clip-close" type="button" aria-label="Close video">
+      Close<span class="clip-x" aria-hidden="true">&times;</span>
+    </button>
+    <video class="clip-video" controls playsinline preload="none" src="/images/video.mp4"></video>
   </div>
 </section>
 
@@ -60,6 +69,57 @@
   .see-more { text-align: center; color: var(--ink); }
   .see-more-top { font-size: 16px; }
   .see-more-sub { font-family: var(--font-type); font-weight: 400; font-size: 12px; }
+
+  /* "click to see a clip" trigger */
+  .clip-trigger { cursor: pointer; transition: opacity 0.15s ease; }
+  .clip-trigger:hover { opacity: 0.6; }
+  .clip-trigger:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  /* Video lightbox (mirrors the Work demo lightbox) */
+  .clip-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4vmin;
+    background: rgba(26, 22, 13, 0.82);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+  .clip-lightbox.open { opacity: 1; visibility: visible; }
+  .clip-video {
+    width: auto;
+    height: auto;
+    max-width: min(1280px, 92vw);
+    max-height: 86vh;
+    background: #000;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+  .clip-close {
+    position: absolute;
+    top: 26px;
+    right: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 2px;
+    border: 0;
+    background: none;
+    color: var(--cream);
+    font-family: var(--font-sans);
+    font-weight: 300;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .clip-close .clip-x { font-size: 20px; line-height: 1; font-weight: 400; }
+  .clip-close:hover { opacity: 0.6; }
 
   .title,
   .group,
@@ -88,3 +148,36 @@
     .see-more { width: auto !important; }
   }
 </style>
+
+<script>
+  const lb = document.getElementById('clip-lightbox');
+  const video = lb?.querySelector('video') as HTMLVideoElement | null;
+  if (lb && video) {
+    const open = () => {
+      lb.classList.add('open');
+      lb.setAttribute('aria-hidden', 'false');
+      video.play().catch(() => {});
+    };
+    const close = () => {
+      lb.classList.remove('open');
+      lb.setAttribute('aria-hidden', 'true');
+      video.pause();
+    };
+    document.querySelectorAll<HTMLElement>('[data-clip-video]').forEach((el) => {
+      el.addEventListener('click', open);
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          open();
+        }
+      });
+    });
+    lb.querySelector('.clip-close')?.addEventListener('click', close);
+    lb.addEventListener('click', (e) => {
+      if (e.target === lb) close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lb.classList.contains('open')) close();
+    });
+  }
+</script>
