@@ -153,6 +153,10 @@
   const lb = document.getElementById('clip-lightbox');
   const video = lb?.querySelector('video') as HTMLVideoElement | null;
   if (lb && video) {
+    // Move the lightbox to <body> so it always overlays the navbar. In paged
+    // mode the active section gets its own stacking context (z-index), which
+    // would otherwise trap a fixed child below the nav.
+    document.body.appendChild(lb);
     const open = () => {
       lb.classList.add('open');
       lb.setAttribute('aria-hidden', 'false');
