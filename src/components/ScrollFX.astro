@@ -102,9 +102,9 @@
       type Step = { fn: () => void; kind: 'type' | 'back' | 'wait'; ms?: number };
       const steps: Step[] = [];
       for (const ch of 'SOSAIAH') steps.push({ fn: () => put(line1, ch), kind: 'type' });
-      for (const ch of 'HILLIER-BRNES') steps.push({ fn: () => put(line2, ch), kind: 'type' });
+      for (const ch of 'HILLIER-BRNES*') steps.push({ fn: () => put(line2, ch), kind: 'type' });
       steps.push({ fn: () => {}, kind: 'wait', ms: charMs * 7 }); // notice the typo
-      for (let k = 0; k < 4; k++) steps.push({ fn: () => del(line2), kind: 'back' }); // RNES -> B
+      for (let k = 0; k < 5; k++) steps.push({ fn: () => del(line2), kind: 'back' }); // *RNES -> B
       steps.push({ fn: () => {}, kind: 'wait', ms: charMs * 3 }); // settle before retyping
       for (const ch of 'ARNES*') steps.push({ fn: () => put(line2, ch), kind: 'type' });
 
