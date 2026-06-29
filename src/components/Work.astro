@@ -165,6 +165,7 @@
     const open = () => {
       lb.classList.add('open');
       lb.setAttribute('aria-hidden', 'false');
+      video.volume = 0.2; // start quiet; users can turn it up via the controls
       video.play().catch(() => {});
     };
     const close = () => {
