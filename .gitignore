@@ -13,3 +13,5 @@ npm-debug.log*
 .DS_Store
 # local figma reference screenshots
 .figma-screens/
+
+.history/
